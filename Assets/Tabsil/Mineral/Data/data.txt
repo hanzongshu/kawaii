@@ -1,0 +1,12 @@
+{
+    "folderDatas": [
+        {
+            "key": "3d2e5471ff216a048acd02e9a36f88a5",
+            "value": "85c34ce6d39031740bf347e06e2539cb"
+        },
+        {
+            "key": "fc9d7a4aba5e0c241804bb337ead1060",
+            "value": "80809a2ddb10dc942864489073ba50f8"
+        }
+    ]
+}
