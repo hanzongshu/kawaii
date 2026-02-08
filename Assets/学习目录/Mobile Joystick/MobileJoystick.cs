@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace 移动操作手柄
@@ -18,6 +19,7 @@ namespace 移动操作手柄
         private bool _canControl;
         private void Start()
         {
+            if (_Canves == null) Debug.Log("请设置Canvse画布，否则无法生效");
             HideJoystick();
         }
 
@@ -32,7 +34,7 @@ namespace 移动操作手柄
         /// </summary>
         public void ClickedOnJoystickZoneCallback()
      {
-            Debug.Log("点击了操作杆区域");
+           
              _clickedPositon = Input.mousePosition;
             _joystickOutline.position = _clickedPositon;
             ShowJoystick();
