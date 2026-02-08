@@ -58,7 +58,7 @@ public class MobileJoystick : MonoBehaviour
     {
         Vector3 currentPosition = Input.mousePosition;
         Vector3 direction = currentPosition - clickedPosition;
-
+        //拿到屏幕系数
         float canvasScale = GetComponentInParent<Canvas>().GetComponent<RectTransform>().localScale.x;
 
         float moveMagnitude = direction.magnitude * moveFactor * canvasScale;
