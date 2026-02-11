@@ -60,30 +60,59 @@ namespace 移动操作手柄
 
         private void ControlJoystick()
         {
-            Vector3 currentPosition = Input.mousePosition;
-            Vector3 direction = currentPosition - _clickedPositon;
-            //拿到屏幕系数
-            float canvasScale = _Canves.GetComponent<RectTransform>().localScale.x;
-            ////拿到位移长度
-            float moveMagnitude = direction.magnitude*_moveFactor*canvasScale;
+            //Vector3 currentPosition = Input.mousePosition;
+            //Vector3 direction = currentPosition - _clickedPositon;
+            ////拿到屏幕系数
+            //float canvasScale = _Canves.GetComponent<RectTransform>().localScale.x;
+            //////拿到位移长度
+            //float moveMagnitude = direction.magnitude*_moveFactor*canvasScale;
 
-            //拿到UI轮廓的宽度，基于UI坐标不是基于像素的
-            float absoluteWidth = _joystickOutline.rect.width / 2;
-            //用宽度乘于屏幕缩放系数
-            float realWidth = absoluteWidth * canvasScale;
-            //约束最大位置为UI轮廓宽的一半
-            moveMagnitude = Mathf.Min(realWidth, moveMagnitude);
+            ////拿到UI轮廓的宽度，基于UI坐标不是基于像素的
+            //float absoluteWidth = _joystickOutline.rect.width / 2;
+            ////用宽度乘于屏幕缩放系数
+            //float realWidth = absoluteWidth * canvasScale;
+            ////约束最大位置为UI轮廓宽的一半
+            //moveMagnitude = Mathf.Min(realWidth, moveMagnitude);
 
-            move = direction.normalized;
+            //move = direction.normalized;
 
-            Vector3 knobMove = move * moveMagnitude;
+            //Vector3 knobMove = move * moveMagnitude;
 
-            Vector3 targetPoistion = _clickedPositon + knobMove;
+            //Vector3 targetPoistion = _clickedPositon + knobMove;
 
-            _joystickKnob.position = targetPoistion;
+            //_joystickKnob.position = targetPoistion;
 
-            if (Input.GetMouseButtonUp(0))
+            //if (Input.GetMouseButtonUp(0))
+            //    HideJoystick();
+
+
+
+
+
+
+            Vector3 clickposition = Input.mousePosition;
+            Vector3 direction = _clickedPositon - clickposition;
+
+            float canvesScale = _Canves.GetComponent<RectTransform>().localScale.x;
+            //移动系数
+            float moveMagnitude = direction.magnitude*_moveFactor * canvesScale;
+            //系数
+            float absoluteWidth = _joystickOutline.rect.width/2;
+            //真正的宽度
+            float realWidth = absoluteWidth*canvesScale;
+
+            float dic = Mathf.Min(moveMagnitude, realWidth) ;
+
+            move= direction.normalized;
+
+            Vector3 knobMove = move * dic;
+
+            Vector3 targetPosition = knobMove + _joystickOutline.position;
+            _joystickOutline.position = targetPosition;
+            if(Input.GetMouseButtonUp(0))
+            {
                 HideJoystick();
+            }
         }
 
        
