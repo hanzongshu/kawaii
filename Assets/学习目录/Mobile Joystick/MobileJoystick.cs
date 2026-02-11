@@ -17,6 +17,9 @@ namespace 移动操作手柄
         [SerializeField, ReadOnly]  Vector3 move;
 
         private bool _canControl;
+
+     
+
         private void Start()
         {
             if (_Canves == null) Debug.Log("请设置Canvse画布，否则无法生效");
