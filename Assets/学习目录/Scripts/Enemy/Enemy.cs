@@ -9,7 +9,7 @@ public class Enemy : MonoBehaviour
     [Header("DEBUG"), SerializeField] bool _gizmos;
 
     [Header("Elements")]
-    private Player player;
+    private Player _player;
 
     [Header("Spawn Sequence Related")]
     [SerializeField] SpriteRenderer _renderer;
@@ -29,8 +29,8 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         _EnemyMovement= GetComponent<EnemyMovement>();
-        player = FindFirstObjectByType<Player>();
-        if (player == null)
+        _player = FindFirstObjectByType<Player>();
+        if (_player == null)
         {
             Debug.LogWarning("No Player found,Auto-destroying...");
             Destroy(gameObject);
@@ -56,7 +56,7 @@ public class Enemy : MonoBehaviour
     {
         SetRenderersVisibility();
          hasSpawned = true;
-        _EnemyMovement.SetPlayer(player);
+        _EnemyMovement.SetPlayer(_player);
     }
 
     private void  SetRenderersVisibility(bool visible=true)
@@ -79,7 +79,7 @@ public class Enemy : MonoBehaviour
 
     private void TryAttack()
     {
-        float distanceToPlayer = Vector2.Distance(transform.position, player.transform.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, _player.transform.position);
 
         if (distanceToPlayer <= playerDetectionRadius)
         {
@@ -95,8 +95,9 @@ public class Enemy : MonoBehaviour
 
     private void Attack()
     {
-        Debug.Log("Dealing" + _damage + "to the player...");
+       
         _attackTimer = 0;
+        _player.TakeDamge(_damage);
     }
 
     private void PassAway()

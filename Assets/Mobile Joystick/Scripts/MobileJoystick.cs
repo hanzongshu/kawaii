@@ -13,11 +13,11 @@ public class MobileJoystick : MonoBehaviour
     private Vector3 clickedPosition;
     private Vector3 move;
     private bool canControl;
-
-    // Start is called before the first frame update
+    [SerializeField, ReadOnly] float canvasScale;  //屏幕系数
     void Start()
     {
         HideJoystick();
+        canvasScale = GetComponentInParent<Canvas>().GetComponent<RectTransform>().localScale.x;
     }
 
     private void OnDisable()
@@ -58,9 +58,7 @@ public class MobileJoystick : MonoBehaviour
     {
         Vector3 currentPosition = Input.mousePosition;
         Vector3 direction = currentPosition - clickedPosition;
-        //拿到屏幕系数
-        float canvasScale = GetComponentInParent<Canvas>().GetComponent<RectTransform>().localScale.x;
-
+      
         float moveMagnitude = direction.magnitude * moveFactor * canvasScale;
 
         float absoluteWidth = joystickOutline.rect.width / 2;
@@ -80,5 +78,8 @@ public class MobileJoystick : MonoBehaviour
             HideJoystick();
     }
 
-    public Vector3 GetMoveVector() => move;
+    public Vector3 GetMoveVector
+    {
+        get => move;
+    }
 }
