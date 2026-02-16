@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 [RequireComponent(typeof(EnemyMovement))]
 public class Enemy : MonoBehaviour
@@ -23,11 +24,24 @@ public class Enemy : MonoBehaviour
     //特效
     [Header("Effects"), SerializeField] ParticleSystem _passAwayParticle;
 
+    /// <summary>
+    /// 生命值
+    /// </summary>
+    [Header("Settings")]
+    [SerializeField, ReadOnly] int _health;
+    [SerializeField] int _maxHealth;
+
+    [SerializeField]
+    private TextMeshPro _healthText;
+
     //是否生成
     private bool hasSpawned;
 
     void Start()
     {
+        _health = _maxHealth;
+        _healthText.SetText(_health.ToString());
+
         _EnemyMovement= GetComponent<EnemyMovement>();
         _player = FindFirstObjectByType<Player>();
         if (_player == null)
@@ -100,6 +114,20 @@ public class Enemy : MonoBehaviour
         _player.TakeDamge(_damage);
     }
 
+    //受到攻击
+    public void TakeDamage(int damage)
+    {
+        int realDamage = Mathf.Min(damage, _health);
+        _health -= realDamage;
+
+        _healthText.SetText(_health.ToString());
+        if (_health <= 0)
+        {
+            PassAway();
+        }
+    }
+
+
     private void PassAway()
     {
         _passAwayParticle.transform.SetParent(null);
@@ -120,5 +148,8 @@ public class Enemy : MonoBehaviour
         Gizmos.color = Color.red;
 
         Gizmos.DrawWireSphere(transform.position, playerDetectionRadius);
+
+        Gizmos.color = Color.white;
+
     }
 }
