@@ -1,88 +1,97 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using NaughtyAttributes; // æ ¸å¿ƒï¼šå¼•å…¥ NaughtyAttributes å‘½åç©ºé—´
+
 public class Weapon : MonoBehaviour
 {
-    enum State
-    {
-        Idle,
-        Attack
-    }
-
     Animator _animator;
 
-    private State  _state;
-    //=======================¼ì²â·¶Î§±äÁ¿=======================
-    [Header("²ã¼¶")]
+    // ==========================================
+    // âš”ï¸ 1. æ ¸å¿ƒæˆ˜æ–—å±æ€§ (æœ€å¸¸è°ƒæ•´çš„æ•°å€¼æ”¾æœ€ä¸Šé¢)
+    // ==========================================
+    [BoxGroup("1. æ ¸å¿ƒæˆ˜æ–—å±æ€§")]
+    [SerializeField] int damage;
+
+    [BoxGroup("1. æ ¸å¿ƒæˆ˜æ–—å±æ€§")]
+    [SerializeField] float _attacksPerSecound = 1f;
+
+
+    // ==========================================
+    // ğŸ¯ 2. ç´¢æ•Œä¸ç„å‡†è®¾å®š
+    // ==========================================
+    [BoxGroup("2. ç´¢æ•Œä¸ç„å‡†è®¾å®š")]
     [SerializeField] private LayerMask _enemyMask;
-    [Header("¼ì²â·¶Î§,°ë¾¶")]
-    [SerializeField] float _Radius = 2f;//Radius:°ë¾¶
-    private readonly Collider2D[] _sharedhitBuff=new Collider2D[16];//16¸öÍ¨³£×ã¹»¼ì²âÖÜÎ§Ò»È¦µĞÈËÁË£¬
-    private ContactFilter2D _contactFilter; //ĞÂÔö:½Ó´¥¹ıÂËÆ÷(ÏÖ´úUnityÎïÀí¼ì²âµÄÁé»ê)
-    [Header("Ãé×¼ËÙ¶È(¶È/Ãë)"), SerializeField] 
-    float _aimSpeedDegrees;
-    float _radPerSec;
-    //===========================================================
 
-    Transform _cachedTransform;//»º´æ×ÔÉíÎ»ÖÃ
+    [BoxGroup("2. ç´¢æ•Œä¸ç„å‡†è®¾å®š")]
+    [SerializeField] float _Radius = 2f;
 
-    //=================½µÆµËÑË÷µÄ¿ØÖÆ±äÁ¿=================
-    private float _searchTimer; private float _searchInterval = 0.05f;//Ã¿0.05Ãë²ÅÈ¥É¨ÃèÒ»´ÎÖÜÎ§
-    Collider2D _currentTarget;//°ÑÕÒµ½µÄÄ¿±ê´æÆğÀ´
-   //====================================================
+    [BoxGroup("2. ç´¢æ•Œä¸ç„å‡†è®¾å®š")]
+    [SerializeField] float _aimSpeedDegrees;
 
-    //===============ÎäÆ÷¼ì²âµĞÈË====================
-    [Header("Elements")]  //Detection :¼ì²â  ¹¥»÷¼ì²â·¶Î§ 
+
+    // ==========================================
+    // ğŸ’¥ 3. å‘½ä¸­åˆ¤å®šåŒºè®¾å®š (Hitbox)
+    // ==========================================
+    [BoxGroup("3. å‘½ä¸­åˆ¤å®šåŒºè®¾å®š")]
     [SerializeField] Transform _hitDetectionTransform;
+
+    [BoxGroup("3. å‘½ä¸­åˆ¤å®šåŒºè®¾å®š")]
+    [SerializeField] float _hitDetectionRadius;
+    [BoxGroup("3. å‘½ä¸­åˆ¤å®šåŒºè®¾å®š")]
+    [Tooltip("å‘½ä¸­ç¢°æ’å™¨ç›’å­")]
+    [SerializeField] BoxCollider2D _hitDetectionCollider;
+
+    // ==========================================
+    // ğŸ“Š 4. åŠ¨ç”»ä¸å†…éƒ¨æ¢ç®—æ•°æ® (è®¾ä¸ºæŠ˜å ç»„ï¼Œä¿æŒæ¸…çˆ½)
+    // ==========================================
+    [Foldout("4. è¿è¡Œä¸åŠ¨ç”»æ•°æ® (åªè¯»)")]
+    [SerializeField, ReadOnly] float _actualTime;
+
+    [Foldout("4. è¿è¡Œä¸åŠ¨ç”»æ•°æ® (åªè¯»)")]
+    [SerializeField, ReadOnly] float _baseAnimLength = 1f;
+
+
+    // ==========================================
+    // å†…éƒ¨ç§æœ‰å˜é‡ (é¢æ¿ä¸å¯è§ï¼Œä¸å½±å“æ’ç‰ˆ)
+    // ==========================================
+    private readonly Collider2D[] _sharedhitBuff = new Collider2D[16];//ç„å‡†åˆ¤æ–­ç¢°æ’ä½“
+    private ContactFilter2D _contactFilter;//ç„å‡†çš„è¿æ¥è¿‡æ»¤å™¨
+    private float _radPerSec;
+    Transform _cachedTransform;
+    private float _searchTimer;
+    private float _searchInterval = 0.05f;
+    Collider2D _currentTarget;
     private readonly Collider2D[] _weaponsHitBuff = new Collider2D[16];
     private ContactFilter2D _weaponsContactFilter;
-    [Header("»÷ÖĞ¼ì²â°ë¾¶"),SerializeField] float _hitDetectionRadius;
-    [Header("Attack"), SerializeField] int damage;
-    //===============================================
+    private HashSet<Collider2D> _damagedEnemiesList = new HashSet<Collider2D>(16);
+    private float _attackTimer;
+    private bool _isAttacking = false;
 
+    private float ActualAttackInterval => _actualTime;
 
-
-    //============¹¥»÷±äÁ¿============
-    private HashSet<Collider2D> _damagedEnemies = new HashSet<Collider2D>(16);
-    //=================================
-
-
-
-    //==========¹¥»÷ÆµÂÊ===========
-    [Header("Ã¿Ãë¹¥»÷´ÎÊı(Ãë)")]//Frequency:ÆµÂÊ
-    [SerializeField] float _attacksPerSecound = 1f;//ÎäÆ÷Ô­±¾µÄ¹¥»÷¼ä¸ô¶ÔÓ¦Ò»ÃëÒ»´Î
-    [Header("Ô­Ê¼¶¯»­µÄÊ±³¤(Ãë)")]
-    [SerializeField,ReadOnly] float _baseAnimLength = 1f;//ÖØµã
-    private float _attackTimer;//¹¥»÷Ê±¼ä£¬´óÓÚ0±íÊ¾ÔÚÀäÈ´ÖĞ£¬0±íÊ¾¿ÉÒÔ¹¥»÷
-    private bool _isAttacking = false;//Ìæ´ú×´Ì¬»ú
-    //Actual:Êµ¼Ê¹¥»÷¼ä¸ô
-    private float ActualAttackInterval => 1f / _attacksPerSecound;
-    //=============================
+    // ==========================================
+    // ç”Ÿå‘½å‘¨æœŸä¸é€»è¾‘ä»£ç  (å®Œå…¨ä¿æŒä½ çš„åŸæ ·)
+    // ==========================================
 
     public void Awake()
     {
         _animator = GetComponent<Animator>();
-        _state = State.Idle;
         _cachedTransform = transform;
-        //ÔÚAwakeÖĞ³õÊ¼»¯¹ıÂËÆ÷£¬Ò»´ÎÉèÖÃ£¬ÖÕÉíÊ¹ÓÃ
+
         _contactFilter = new ContactFilter2D();
-        _contactFilter.useLayerMask=true;
+        _contactFilter.useLayerMask = true;
         _contactFilter.SetLayerMask(_enemyMask);
         _contactFilter.useTriggers = true;
-        //ÎäÆ÷¹ıÂËÆ÷³õÊ¼»¯
-        _weaponsContactFilter = new ContactFilter2D();
-        _weaponsContactFilter.useLayerMask=true;
-        _weaponsContactFilter.SetLayerMask(_enemyMask);
-        _weaponsContactFilter.useTriggers=true;
 
-        _radPerSec =_aimSpeedDegrees*Mathf.Deg2Rad;
+        _weaponsContactFilter = new ContactFilter2D();
+        _weaponsContactFilter.useLayerMask = true;
+        _weaponsContactFilter.SetLayerMask(_enemyMask);
+        _weaponsContactFilter.useTriggers = true;
+
+        _radPerSec = _aimSpeedDegrees * Mathf.Deg2Rad;
     }
 
-
-    /// <summary>
-    /// ²éÕÒÃé×¼×î½üÄ¿±ê,±È½Ì³Ì¸üºÃµÄ0GC·½Ê½
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
     private Collider2D FindAndAimNearestEnemy()
     {
         int hitCount = Physics2D.OverlapCircle(_cachedTransform.position, _Radius, _contactFilter, _sharedhitBuff);
@@ -109,26 +118,21 @@ public class Weapon : MonoBehaviour
                 minSqrDistance = sqrDst;
                 closestTarget = col;
             }
-
         }
 
         return closestTarget;
     }
 
-
-
     private void Update()
     {
-        //ÀäÈ´¼ÆÊ±Æ÷£¬Ö»ÒªÔÚÀäÈ´ÖĞ£¬¾ÍÒ»Ö±µİ¼õÊ±¼ä
         if (_attackTimer > 0)
         {
             _attackTimer -= Time.deltaTime;
         }
-        //Ãé×¼Âß¼­£º²»¹ÜÊÇ·ñÔÚ¹¥»÷£¬Ã¿Ö¡³¢ÊÔÑ°ÕÒĞÂµÄµĞÈË
+
         AutoAim();
-        //3.´¥·¢¹¥»÷Âß¼­
-        //Èç¹ûÓĞµĞÈË+ÀäÈ´Íê±Ï+Ã»ÓĞÔÚ»Óµ¶
-        if(_currentTarget!=null && _attackTimer <= 0 && !_isAttacking)
+
+        if (_currentTarget != null && _attackTimer <= 0 && !_isAttacking)
         {
             StartAttack();
         }
@@ -140,8 +144,6 @@ public class Weapon : MonoBehaviour
 
     private void AutoAim()
     {
-        //ĞÂ°æ±¾ÖÕ¼«Ğ´·¨£¬Ê¹ÓÃFilterºÍBufferÊı×éµÄÖØÔØ·½·¨
-        //ËüÒÀÈ»·µ»Ø¼ì²âµ½µÄÊıÁ¿£¬ÒÀÈ»ÊÇ¾ø¶ÔµÄ0GC£¡
         _currentTarget = FindAndAimNearestEnemy();
 
         if (_currentTarget == null || !_currentTarget.gameObject.activeInHierarchy)
@@ -151,55 +153,41 @@ public class Weapon : MonoBehaviour
         }
 
         Vector3 targetDirection = _currentTarget.transform.position - _cachedTransform.position;
-        //================²åÖµĞı×ª´úÂëºËĞÄ====================
         _cachedTransform.up = Vector3.RotateTowards(_cachedTransform.up, targetDirection, _radPerSec * Time.deltaTime, 0f);
-
     }
-
-
-
-    //¿ªÊ¼¹¥»÷
 
     private void StartAttack()
     {
-        _isAttacking =true;
+        _isAttacking = true;
         _attackTimer = ActualAttackInterval;
-        //¶¯»­ËÙ¶È ÓÃÔ­Ê¼ËÙ¶È³ıÒÔÏÖÔÚ¹¥»÷¼ä¸ô
         _animator.speed = _baseAnimLength / ActualAttackInterval;
         _animator.Play("Attack_");
-        _damagedEnemies.Clear();
+        _damagedEnemiesList.Clear();
     }
 
- 
-    //½áÊø¹¥»÷
     private void StopAttack()
     {
-      _isAttacking=false;
-      
+        _isAttacking = false;
+        _animator.speed = 1f; // ä¿®å¤ï¼šæ”»å‡»ç»“æŸæ¢å¤åŸé€Ÿï¼Œé˜²æ­¢å½±å“åç»­é€»è¾‘
     }
-
 
     private void Attack()
     {
-
-        int hitCount = Physics2D.OverlapCircle(_hitDetectionTransform.position, _hitDetectionRadius, _weaponsContactFilter, _weaponsHitBuff);
+        int hitCount = Physics2D.OverlapCollider(_hitDetectionCollider,_weaponsContactFilter,_weaponsHitBuff);
         if (hitCount == 0) return;
+
         for (int i = 0; i < hitCount; i++)
         {
-            if (!_damagedEnemies.Contains(_weaponsHitBuff[i]))
+            if (!_damagedEnemiesList.Contains(_weaponsHitBuff[i]))
             {
                 if (_weaponsHitBuff[i].TryGetComponent<Enemy>(out Enemy enemy))
                 {
                     enemy.TakeDamage(damage);
-                    _damagedEnemies.Add(_weaponsHitBuff[i]);
+                    _damagedEnemiesList.Add(_weaponsHitBuff[i]);
                 }
-
-
             }
-
         }
     }
-
 
     private void OnDrawGizmos()
     {
@@ -210,20 +198,18 @@ public class Weapon : MonoBehaviour
         Gizmos.DrawWireSphere(_hitDetectionTransform.position, _hitDetectionRadius);
     }
 
+    private void OnValidate()
+    {
+        if (_attacksPerSecound <= 0.01f)
+        {
+            _attacksPerSecound = 0.01f;
+        }
+
+        _actualTime = 1f / _attacksPerSecound;
+    }
+
+
+    // ==========================================
+   
+    // ==========================================
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

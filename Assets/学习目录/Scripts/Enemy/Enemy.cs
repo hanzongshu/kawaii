@@ -1,9 +1,16 @@
 using UnityEngine;
 using TMPro;
+using System;
+using NaughtyAttributes;
 
 [RequireComponent(typeof(EnemyMovement))]
 public class Enemy : MonoBehaviour
 {
+    public static event Action<int ,Vector3> OnDamageTaken;
+
+    [BoxGroup("伤害冒字偏移")]
+    [SerializeField]  float damageTextOffestUp=1.2f;
+
     [Header("Components")]
     private EnemyMovement _EnemyMovement;
     //是否显示绘制
@@ -37,10 +44,12 @@ public class Enemy : MonoBehaviour
     //是否生成
     private bool hasSpawned;
 
+    private CircleCollider2D _circleCollider;
     void Start()
     {
+       _circleCollider = GetComponent<CircleCollider2D>();
         _health = _maxHealth;
-        _healthText.SetText(_health.ToString());
+       // _healthText.SetText(_health.ToString());
 
         _EnemyMovement= GetComponent<EnemyMovement>();
         _player = FindFirstObjectByType<Player>();
@@ -71,6 +80,7 @@ public class Enemy : MonoBehaviour
         SetRenderersVisibility();
          hasSpawned = true;
         _EnemyMovement.SetPlayer(_player);
+        _circleCollider.enabled = true;
     }
 
     private void  SetRenderersVisibility(bool visible=true)
@@ -119,8 +129,9 @@ public class Enemy : MonoBehaviour
     {
         int realDamage = Mathf.Min(damage, _health);
         _health -= realDamage;
-
-        _healthText.SetText(_health.ToString());
+   
+      //  _healthText.SetText(_health.ToString());
+      OnDamageTaken?.Invoke(damage, transform.position + Vector3.up * damageTextOffestUp);
         if (_health <= 0)
         {
             PassAway();
